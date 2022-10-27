@@ -23,11 +23,11 @@ class PostgresClient:
         config_parser.read(path)
         if config_parser.has_section(section):
             config_params = config_parser.items(section)
-            for k,v in confirg_params:
+            #"config_params is not defined by pylance"
+            for k,v in config_params:
                 conn_dict[k]=v
                 
         conn = connect(
-                        #In the demo "make_conninfo was green"
             conninfo=make_conninfo(**conn_dict),
             **kwargs
         )
@@ -39,8 +39,7 @@ class PostgresClient:
     def connect(self, **kwargs) -> Connection:
         
         
-        conn = connect(
-                        #In the demo "make_conninfo was green"
+        conn = connect(   
             connfinfo=make_conninfo(
                 host=self.host,
                 port=self.port,
