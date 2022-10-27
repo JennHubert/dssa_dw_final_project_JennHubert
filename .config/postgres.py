@@ -11,7 +11,7 @@ class PostgresClient:
         self.port = port
         self.user = user
         self.password = password
-        self.dbname = dbname
+        self.database = dbname
         
     def connect_from_config(self, path:str, section:str, **kwargs) -> Connection:
         
@@ -45,7 +45,7 @@ class PostgresClient:
                 port=self.port,
                 user=self.user,
                 password=self.password,
-                dbname=self.dbname,
+                dbname=self.database,
                 **kwargs)
         )
         
