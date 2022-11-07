@@ -12,11 +12,10 @@ class QueueFactory:
         '''Factory that returns a queue based on type
 	
 	Args:
-	
-
-
-
+        type (str) : type of queue to use. Defaults to FIFO thread-safe queue.
+        Other accepted types are 'multi-processing 'asyncio' or 'multi-threading'
 	Returns:
+            Queue - JoinableQueue - AQueue : Python Queue
 	'''
         if type == 'default':
             return Queue()
