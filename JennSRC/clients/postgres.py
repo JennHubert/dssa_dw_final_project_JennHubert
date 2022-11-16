@@ -27,7 +27,7 @@ class PostgresClient:
         '''
         
         conn_dict = {}
-        config_parser = configparser()
+        config_parser = ConfigParser()
         
         #Below reads the config file
         config_parser.read(path)

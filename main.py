@@ -1,10 +1,26 @@
 import pandas as pd
 from JennSRC.clients.postgres import PostgresClient
+from tasks import TaskContainer
 
 
 DATABASECONFIG='.config/database.ini'
 
 
+def create_cursor(path, section):
+    client = PostgresClient()
+    conn = client.connect_from_config(path, section, autocommit=True)
+    cursor = conn.cursor()
+    return cursor
+
+
+
+task1=TaskContainer(create_cursor)
+task1.run(path=DATABASECONFIG, section='postgresql') 
+
+
+
+
+'''
 #Make Task Class - container for the functions that executes the functions
 #^^just running the functions
 from typing import List, Tuple
@@ -16,7 +32,8 @@ def setup_client(config_file, section):
     return cursor
 
 '''
-
+'''
+#GARBAGE BELOW
 def create_new_schema(cursor, schema)-> Connection:
     cursor.execute(f"SET search_path to {catalog}, {schema}:")
     return cursor
@@ -24,7 +41,7 @@ def create_new_schema(cursor, schema)-> Connection:
 
 '''
 
-
+'''
 def get_search_path(cursor, catalog, schema) -> Connection:
     cursor.execute('SET search_path TO {catalog}, {schema}:')
     return cursor
@@ -50,3 +67,4 @@ cursor=tsk_1.run(cursor=cursor, catalog='dvdrental', schema='public')
 data=tsk_3.run(cursor=cursor, table='actor')
 df=tsk_4.run(data)
 df.head
+'''
