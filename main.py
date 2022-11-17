@@ -1,10 +1,41 @@
 import pandas as pd
+import psycopg2
 from JennSRC.clients.postgres import PostgresClient
 from tasks import TaskContainer
+#from        import Cursor
 
+#Parameters
 
 DATABASECONFIG='.config/database.ini'
+SECTION='postgresql'
+#DW = Schema('dssa')
 
+
+#Table Defs
+'''
+FACT_RENTAL = ()
+
+
+DIM_CUSTOMER = ()
+
+
+DIM_STAFF = ()
+
+
+
+DIM_FILM = ()
+
+
+
+DIM_DATE = ()
+
+
+
+DIM_STORE = ()
+
+
+'''
+#Functions
 
 def create_cursor(path, section):
     client = PostgresClient()
@@ -12,13 +43,50 @@ def create_cursor(path, section):
     cursor = conn.cursor()
     return cursor
 
+#def create_schema(cursor: cursor, schema_name:str):
+ #   q= f"CREATE SCHEMA IF NOT EXISTS {schema_name};"
+  #  cursor.execute(q)
+   # return cursor
+'''
+def create_table(
+    cursor:Cursor,
+    table_name:str,
+    definition:tuple,
+    primary_key:str=None,
+    foreign_keys:list=None,
+    reference_tables:list=None):
+    
+    dd1= PostgresSQLQuery \
+        .create_table(table_name) \
+        .if_not_exists() \
+        .columns(*definition)
+        
+    if primary_key is not None:
+        dd1 = dd1.primary_key(primary_key)
+        
+    if foreign_keys is not None:
+        for idx, key in enumerate(foreign_keys):
+            dd1.foreign_key(
+                coulmns=key,
+                reference_table=[idx],
+                reference_columns=key
+            )
+    dd1=dd1.get_sql()
 
+    cursor.execute(dd1)
+    return cursor
 
+'''
 task1=TaskContainer(create_cursor)
-task1.run(path=DATABASECONFIG, section='postgresql') 
+task1.run(path=DATABASECONFIG, section='postgresql')
 
+'''
+task2=TaskContainer(create_schema)
+task2.run(path=DATABASECONFIG, section='postgresql')
+task3=TaskContainer(create_table)
+task3.run(path=DATABASECONFIG, section='postgresql')
 
-
+'''
 
 '''
 #Make Task Class - container for the functions that executes the functions
