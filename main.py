@@ -1,7 +1,8 @@
 import pandas as pd
 import psycopg2
 from psycopg import Cursor
-from pypika import PostgreSQLQuery, Schema, Column
+from pypika import Schema, Column
+from pypika import PostgreSQLQuery
 from JennSRC.clients.postgres import PostgresClient
 from tasks import TaskContainer
 
@@ -75,7 +76,7 @@ def create_schema(cursor: Cursor, schema_name:str):
     q= f"CREATE SCHEMA IF NOT EXISTS {schema_name};"
     cursor.execute(q)
     return cursor
-'''
+
 def create_table(
     cursor:Cursor,
     table_name:str,
@@ -103,20 +104,18 @@ def create_table(
 
     cursor.execute(dd1)
     return cursor
+    
+def tear_down(cursor: Cursor):
+    cursor.execute('Drop Schema DSSA Cascade;')
+    cursor.close()
+    return
 
-'''
-task1=TaskContainer(create_cursor)
-task1.run(path=DATABASECONFIG, section='postgresql')
-#task2=TaskContainer(create_schema)
-#task2.run('schema_name': DW._name)
-'''
-task2=TaskContainer(create_schema)
-task2.run(path=DATABASECONFIG, section='postgresql')
-task3=TaskContainer(create_table)
-task3.run(path=DATABASECONFIG, section='postgresql')
 
-'''
+#task1=TaskContainer(create_cursor)
+#task1.run(path=DATABASECONFIG, section='postgresql')
 
+
+def main()
 '''
 #Make Task Class - container for the functions that executes the functions
 #^^just running the functions
@@ -165,3 +164,5 @@ data=tsk_3.run(cursor=cursor, table='actor')
 df=tsk_4.run(data)
 df.head
 '''
+if __name__ == '__main__':
+    main()
