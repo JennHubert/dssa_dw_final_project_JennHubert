@@ -1,14 +1,15 @@
 import pandas as pd
 import psycopg2
+from psycopg import Cursor
+from pypika import PostgreSQLQuery, Schema, Column
 from JennSRC.clients.postgres import PostgresClient
 from tasks import TaskContainer
-#from        import Cursor
 
 #Parameters
 
 DATABASECONFIG='.config/database.ini'
 SECTION='postgresql'
-#DW = Schema('dssa')
+DW = Schema('dssa')
 
 
 #Table Defs
@@ -43,10 +44,10 @@ def create_cursor(path, section):
     cursor = conn.cursor()
     return cursor
 
-#def create_schema(cursor: cursor, schema_name:str):
- #   q= f"CREATE SCHEMA IF NOT EXISTS {schema_name};"
-  #  cursor.execute(q)
-   # return cursor
+def create_schema(cursor: Cursor, schema_name:str):
+    q= f"CREATE SCHEMA IF NOT EXISTS {schema_name};"
+    cursor.execute(q)
+    return cursor
 '''
 def create_table(
     cursor:Cursor,
@@ -79,7 +80,8 @@ def create_table(
 '''
 task1=TaskContainer(create_cursor)
 task1.run(path=DATABASECONFIG, section='postgresql')
-
+#task2=TaskContainer(create_schema)
+#task2.run('schema_name': DW._name)
 '''
 task2=TaskContainer(create_schema)
 task2.run(path=DATABASECONFIG, section='postgresql')
