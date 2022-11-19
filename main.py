@@ -13,29 +13,56 @@ DW = Schema('dssa')
 
 
 #Table Defs
-'''
-FACT_RENTAL = ()
+FACT_RENTAL = (
+    Column('sk_customer', 'INT', False),
+    Column('sk_date', 'INT', False),
+    Column('sk_store', 'INT', False),
+    Column('sk_film', 'INT', False),
+    Column('sk_staff', 'INT', False),
+    Column('count_rentals', 'INT', False),  
+)
+
+DIM_CUSTOMER = (
+    Column('sk_customer', 'INT', False),
+    Column('name', 'VARCHAR(100)', False),
+    Column('email', 'INT', False),   
+)
+
+DIM_STAFF = (
+    Column('sk_staff', 'INT', False),
+    Column('name', 'VARCHAR(100)', False),
+    Column('email', 'VARCHAR(100)', False),
+)
 
 
-DIM_CUSTOMER = ()
+DIM_FILM = (
+    Column('sk_film', 'INT', False),
+    Column('rating_code', 'VARCHAR(100)', False),
+    Column('film_duration', 'INT', False),
+    Column('rental_duration', 'INT', False),
+    Column('language', 'CHAR(20)', False),
+    Column('release_year', 'INT', False),
+    Column('title', 'VARCHAR(225)', False),
+)
 
 
-DIM_STAFF = ()
+DIM_DATE = (
+    Column('sk_date', 'TIMESTAMP', False),
+    Column('quarter', 'INT', False),
+    Column('year', 'INT', False),
+    Column('month', 'INT', False),
+    Column('day', 'INT', False),
+)
 
+DIM_STORE = (
+    Column('sk_store', 'INT', False),
+    Column('name', 'VARCHAR(100)', False),
+    Column('address', 'VARCHAR(50)', False),
+    Column('city', 'VARCHAR(50)', False),
+    Column('state', 'VARCHAR(20)', False),
+    Column('country', 'VARCHAR(50)', False),
+)
 
-
-DIM_FILM = ()
-
-
-
-DIM_DATE = ()
-
-
-
-DIM_STORE = ()
-
-
-'''
 #Functions
 
 def create_cursor(path, section):
