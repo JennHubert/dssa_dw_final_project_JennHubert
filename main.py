@@ -2,7 +2,7 @@ import pandas as pd
 import psycopg2
 from psycopg import Cursor
 from pypika import Schema, Column
-from pypika import PostgreSQLQuery
+from pypika import PostgreSQLQuery as Q
 from JennSRC.clients.postgres import PostgresClient
 from tasks import TaskContainer
 
@@ -85,7 +85,7 @@ def create_table(
     foreign_keys:list=None,
     reference_tables:list=None):
     
-    dd1= PostgresSQLQuery \
+    dd1= Q \
         .create_table(table_name) \
         .if_not_exists() \
         .columns(*definition)
