@@ -1,6 +1,4 @@
-from asyncio import Queue as AQueue
 from queue import Queue as Queue
-from multiprocessing import JoinableQueue
 from typing import Union
 
 
@@ -21,9 +19,5 @@ class QueueFactory:
             return Queue()
         elif type == 'multi-threading':
             return Queue()
-        elif type == 'multi-processing':
-            return JoinableQueue()
-        elif type == 'asyncio':
-            return AQueue()
         else:
             raise ValueError(type)
