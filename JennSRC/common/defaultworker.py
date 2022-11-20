@@ -1,5 +1,9 @@
 
 
+    
+
+
+'''
 class DefaultWorker():
     
     worker_id = 0
@@ -11,3 +15,4 @@ class DefaultWorker():
         self._log = self.logger
         
     def run(self)
+    '''
