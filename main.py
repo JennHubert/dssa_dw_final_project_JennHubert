@@ -313,7 +313,8 @@ def main():
     assert is_directed_acyclic_graph(DAG) == True
     assert is_weakly_connected(DAG) == True
     assert is_empty(DAG) == False
-    print(nx.topological_sort(DAG))
+    print(list(nx.topological_sort(DAG)))
+    
     
     
     
