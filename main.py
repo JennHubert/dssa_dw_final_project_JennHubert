@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import matplotlib.pyplot as plt
 from tasks import TaskContainer
 from pypika import Schema
 from JennSRC.clients.postgres import PostgresClient
@@ -158,7 +159,8 @@ def transform_store(store_df,staff_df,address_df,city_df,country_df):
 def transform_factrental(rental_df,inventory_df,dim_date,dim_film,dim_staff,dim_store):
     
     rental_df.rename(columns={'customer_id':'sk_customer', 'rental_date':'date'}, inplace=True)
-    rental_df['date'] = rental_df.date.dt.date
+    #rental_df['date'] = rental_df.date.dt.date
+    rental_df['date']=pd.to_datetime(rental_df.date).dt.date
     rental_df = rental_df.merge(dim_date, how='inner', on='date')
     rental_df = rental_df.merge(inventory_df, how='inner', on='inventory_id')
     rental_df = rental_df.merge(dim_film, how='inner', left_on='film_id', right_on='sk_film')
@@ -214,11 +216,11 @@ def main():
     
     #Store Table Creations
     store = read_table(sql='SELECT * FROM public.store', con=conn)
-    staff= read_table(sql='SELECT * from public.staff', con=conn)
+    staff2= read_table(sql='SELECT * from public.staff', con=conn)
     address = read_table(sql='SELECT * from public.address', con=conn)
     city = read_table(sql='SELECT * from public.city', con=conn)
     country= read_table(sql='SELECT * FROM public.country', con=conn)
-    dim_store= transform_store(store_df=store,staff_df=staff,address_df=address,city_df=city,country_df=country)
+    dim_store= transform_store(store_df=store,staff_df=staff2,address_df=address,city_df=city,country_df=country)
     load_dim_store= write_table(df=dim_store,con=conn, name='dim_store', schema='dssa', if_exist='replace')
     
     
@@ -232,6 +234,7 @@ def main():
     #Create Connection
     task1=TaskContainer(create_conn)
     task1.run(path=DATABASECONFIG, section='postgresql')
+    
     #Create Customer Table
     task2=TaskContainer(read_table)
     task2.run(sql='SELECT * FROM public.customer', con=conn)
@@ -239,6 +242,7 @@ def main():
     task3.run(df=customer)
     task4=TaskContainer(write_table)
     task4.run(df=dim_customer, con=conn, name='dim_customer', schema='dssa', if_exist='replace')
+    
     #Create Staff Table
     task5=TaskContainer(read_table)
     task5.run(sql='SELECT * from public.staff', con=conn)
@@ -247,17 +251,109 @@ def main():
     task7=TaskContainer(write_table)
     task7.run(df=dim_staff, con=conn, name='dim_staff', schema='dssa', if_exist='replace')
     
-    nodes = [(task1, task2), (task2, task3), (task3, task4), (task4, task5), (task5, task6), (task6, task7)    
+    #Create Film Table
+    task8=TaskContainer(read_table)
+    task8.run(sql='SELECT * from public.film', con=conn)
+    task9=TaskContainer(read_table)
+    task9.run(sql='SELECT * from public.language', con=conn)       
+    task10=TaskContainer(transform_film)
+    task10.run(df=film,df2=language)     
+    task11=TaskContainer(write_table)
+    task11.run(df=dim_film, con=conn, name='dim_film', schema='dssa', if_exist='replace')
+    
+    #Create Date Table
+    task12=TaskContainer(read_table)
+    task12.run(sql='SELECT *  FROM public.rental',con=conn)
+    task13=TaskContainer(transform_date)
+    task13.run(date_df=date)
+    task14=TaskContainer(write_table)
+    task14.run(df=dim_date,con=conn,name='dim_date',schema='dssa',if_exist='replace')
+    
+    #Create Store Table
+    task15=TaskContainer(read_table)
+    task15.run(sql='SELECT * FROM public.store', con=conn)    
+    task16=TaskContainer(read_table)
+    task16.run(sql='SELECT * from public.staff', con=conn)
+    task17=TaskContainer(read_table)
+    task17.run(sql='SELECT * from public.address', con=conn)
+    task18=TaskContainer(read_table)
+    task18.run(sql='SELECT * from public.city', con=conn)
+    task19=TaskContainer(read_table)
+    task19.run(sql='SELECT * FROM public.country', con=conn)
+    task20=TaskContainer(transform_store)
+    task20.run(store_df=store,staff_df=staff2,address_df=address,city_df=city,country_df=country)
+    task21=TaskContainer(write_table)
+    task21.run(df=dim_store,con=conn, name='dim_store', schema='dssa', if_exist='replace')  
+    
+    #Create Fact Rental Table
+    task22=TaskContainer(read_table)
+    task22.run(sql='SELECT * FROM public.rental', con=conn)  
+    task23=TaskContainer(read_table)
+    task23.run(sql='SELECT * FROM public.inventory',con=conn)
+    task24=TaskContainer(transform_factrental)
+    task24.run(rental_df=rental, inventory_df= inventory, dim_date=dim_date, dim_film=dim_film,dim_staff=dim_staff,dim_store=dim_store)
+    task25=TaskContainer(write_table)
+    task25.run(df=dim_factrental,con=conn,name='fact_rental', schema='dssa',if_exist='replace')
+    
+    
+   #Below I will use NetworkX  to build a DAG 
+    
+    nodes = [(task1, task2), (task2, task3), (task3, task4), (task4, task5), (task5, task6), (task6, task7), 
+             (task7, task8), (task8, task9), (task9, task10), (task10, task11), (task11, task12), (task12, task13),
+             (task13, task14), (task14, task15), (task15, task16), (task16, task17), (task17, task18), (task18, task19), 
+             (task19, task20), (task20, task21), (task21, task22), (task22, task23), (task23, task24),(task24, task25)
+                 
     ]
     
     DAG = nx.DiGraph(nodes)
     print(DAG)
+    nx.draw(DAG)
     
-    
+    #Below I am running checks on my DAG
     assert is_directed_acyclic_graph(DAG) == True
-    #is_weakly_connected(DAG)
-    assert is_directed_acyclic_graph(DAG) == True
+    assert is_weakly_connected(DAG) == True
     assert is_empty(DAG) == False
+    print(nx.topological_sort(DAG))
+    
+    
+    
+    #q=QueueFactory.factory('default')
+    
+    
+    
+    '''
+    #This is the worker that interacts with the queue
+    def run(task_queue):
+        result_from_last_task = tuple()
+        while not task_queue.empty():
+        
+        # Get the activity from the queue to process
+            task = task_queue.get()
+        
+        # Get inputs to use from dependencies
+            inputs = result_from_last_task
+
+        # Run the task with instructions
+            result = task.run(inputs)
+        
+        # Put the results of the complete task in the result queue
+            result_from_last_task = result
+
+        # Activity is finished running
+            task_queue.task_done()
+    
+    
+    
+    # This the topological order piece. 
+        for task_node in topological_sort(DAG):
+    
+    # For each node we get we want to put them in a Queue
+            task_queue.put(task_node)
+
+        run(task_queue)
+  '''  
+
+    
     '''
 
 #Make Task Class - container for the functions that executes the functions
@@ -271,38 +367,6 @@ def setup_client(config_file, section):
     return cursor
 
 '''
-'''
-
-tsk_0=Task(setup_client)
-tsk_1=Task(set_search_path)
-#tsk_2=Task(create_new_schema)
-tsk_3=Task(read_table)
-tsk_4=Task(to_pandas_df)
-
-
-cursor=tsk_0.run('../../JENNSRC\.config/postgres.py', 'postgresql')
-#I think the '.postgres.py is referring to the file in the config folder right?
-cursor=tsk_1.run(cursor=cursor, catalog='dvdrental', schema='public')
-data=tsk_3.run(cursor=cursor, table='actor')
-df=tsk_4.run(data)
-df.head
-'''
-
-#task1=TaskContainer(create_cursor)
-#task1.run(path=DATABASECONFIG, section='postgresql')
-'''
-task1=TaskContainer(create_conn)
-task1.run(path=DATABASECONFIG, section='postgresql')
-task2=TaskContainer(read_table)
-task2.run(sql='SELECT * FROM public.customer', con=conn)
-task3=TaskContainer(transform_customer)
-task3.run(df=customer)
-'''
-
-
-
-
-
 
 
 

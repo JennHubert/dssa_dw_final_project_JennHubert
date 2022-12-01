@@ -7,3 +7,7 @@ It takes data from a highly normalized transactional database and transforms it 
 Below is an image of the star schema
 
 ![img](images/StarSchema.png)
+
+Below is an image of my DAG
+
+![img](images/DAG.png)
