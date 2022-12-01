@@ -1,5 +1,5 @@
 from typing import Dict, List, Type
-from tasks import TaskContainer
+from JennSRC.common.tasks import TaskContainer
 from networkx import(DiGraph, topological_sort)
 
 class DAG:

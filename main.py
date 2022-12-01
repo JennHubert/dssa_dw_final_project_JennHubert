@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-from tasks import TaskContainer
+from JennSRC.common.tasks import TaskContainer
 from pypika import Schema
 from JennSRC.clients.postgres import PostgresClient
 from JennSRC.common.queue import QueueFactory
