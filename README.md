@@ -46,5 +46,5 @@ nodes = [(task1, task2), (task2, task3), (task3, task4), (task4, task5), (task5,
     ]
     
     DAG = nx.DiGraph(nodes)
-    print(DAG)
+   
     nx.draw(DAG)
