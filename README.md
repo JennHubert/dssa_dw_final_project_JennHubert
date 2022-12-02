@@ -16,9 +16,8 @@ The following python libraries were crucial in completing this assignement
 ---
 ## Project Structure
 Below I decsribe where and why things are located there they are.
-*   `.config` and `.vscode` - This folder for configuration files (Example: `.json`, `.yaml`, `.toml`, `.ini`)
+*   `.config` - This folder for configuration files (Example: `.json`, `.ini`)
 *   `images` - This folder hold PNG images used for this readme page.
-*   `samples` - Place for getting started tutorials.
 *   `JennSRC` - This is the source code folder containing all application code and modules.
 *   `tools` - This folder stores requirements for running this code
 *   `main.py` - This script is the entry point to the ETL process
