@@ -3,9 +3,6 @@ A bit of code that we'll write and then import somewhere else
 
 Task class is a container
 '''
-from typing import TypeVar, Callable
-
-
 
 class TaskContainer():
     

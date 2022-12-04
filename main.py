@@ -1,19 +1,15 @@
 import os
 import pandas as pd
-import matplotlib.pyplot as plt
 from JennSRC.common.tasks import TaskContainer
 from pypika import Schema
 from JennSRC.clients.postgres import PostgresClient
-from JennSRC.common.queue import QueueFactory
 from pypika import PostgreSQLQuery as Q
 from sqlalchemy import create_engine  
 import networkx as nx
 from networkx import (
     is_directed_acyclic_graph,
     is_weakly_connected,
-    number_of_nodes,
-    is_empty,
-    topological_sort
+    is_empty
 )
 
 host = os.environ["host"]
@@ -27,28 +23,11 @@ SQLALCHEMY_DATABASE_URI = f"{dbtype}://{user}:{password}@{host}:{port}/{db}"
 
 conn = create_engine(SQLALCHEMY_DATABASE_URI, pool_pre_ping=True)
 
-
-
-
-
-
-
-#import pandas as pd
-#import psycopg2
-#from psycopg import Cursor
-#from pypika import Schema, Column
-#from pypika import PostgreSQLQuery as Q
-#from JennSRC.clients.postgres import PostgresClient
-#from tasks import TaskContainer
-#from JennSRC.common.queue import QueueFactory
-
-
-#Parameters
+#~~~~~~~~~~~  PARAMETERS  ~~~~~~~~~~~~~~~~#
 
 DATABASECONFIG='.config/database.ini'
 SECTION='postgresql'
 DW = Schema('dssa')
-TASKQUEUE=QueueFactory.factory()
 
 #~~~~~~~~~~~~~ FUNTCTIONS ~~~~~~~~~~~~~~~#  
 
@@ -57,7 +36,6 @@ TASKQUEUE=QueueFactory.factory()
 #   This code moves the data from the database to the data warehouse
 #   and builds the star schema!
  
-
 
 def create_conn(path, section):
     """Creates a Connection to the Database 
@@ -72,7 +50,6 @@ def create_conn(path, section):
     """
     client = PostgresClient()
     con = client.connect_from_config(path, section, autocommit=True)
-    #cursor = conn.cursor()
     return con
 
 # Takes care of the "Extract" part  of ETL
@@ -80,11 +57,11 @@ def read_table(sql, con) -> pd.DataFrame:
     """Executes a query and retrieves data from the database
 
     Args:
-        sql (_type_): _description_
+        sql (string): SQL query
         con (Connection): a connection instance
 
     Returns:
-        pd.DataFrame: _description_
+        df (dataframe): a pandas dataframe
     """
     df = pd.read_sql(sql=sql, con=con)
     return df
@@ -101,7 +78,7 @@ def write_table(df:pd.DataFrame, name, con, schema, if_exist='replace') -> pd.Da
         if_exist (str, optional): Defaults to 'replace'.
 
     Returns:
-        pd.DataFrame: dataframe to be loaded into data warehouse
+        None: a pandas dataframe to be loaded into data warehouse
     """
     df.to_sql(name=name, con=con, if_exists=if_exist, schema=schema, index=False, method='multi')
     return None
@@ -111,7 +88,14 @@ def write_table(df:pd.DataFrame, name, con, schema, if_exist='replace') -> pd.Da
 
 
 def transform_customer(df):
-    
+    """ Builds the dw customer dimension object
+
+    Args:
+        df (pd.DataFrame): dataframe of the raw customer table
+
+    Returns:
+       pd.DataFrame : customer dimension object as a pandas dataframe
+    """
     df.rename(columns={'customer_id': 'sk_customer'}, inplace=True)
     df['name'] = df.first_name + " " + df.last_name
     dim_customer = df[['sk_customer', 'name', 'email']].copy()
@@ -120,7 +104,14 @@ def transform_customer(df):
 
 
 def transform_staff(df):
-   
+    """ Builds the dw staff dimension object
+
+    Args:
+        df (pd.Dataframe): dataframe of the raw staff table
+
+    Returns:
+        pd.DataFrame : staff dimension object as a pandas dataframe
+    """
     df.rename(columns={'staff_id': 'sk_staff'}, inplace=True)
     df['name'] = df.first_name + " " + df.last_name
     dim_staff = df[['sk_staff','name', 'email']].copy()
@@ -129,7 +120,15 @@ def transform_staff(df):
 
 
 def transform_film(df,df2):
-   
+    """ Builds the film dimension object
+
+    Args:
+        df (pd.Dataframe): dataframe of the raw film table
+        df2 (pd.Dataframe): dataframe of the raw language table
+
+    Returns:
+        pd.DataFrame : film dimension object as a pandas dataframe
+    """
     df.rename(columns={'film_id': 'sk_film','rating': 'rating_code','length': 'film_duration'}, inplace=True)
     df2.rename(columns={'language': 'name'}, inplace=True)
     dim_film=df.merge(right=df2, how='inner', on='language_id')
@@ -140,7 +139,18 @@ def transform_film(df,df2):
 
 
 def transform_store(store_df,staff_df,address_df,city_df,country_df):
-    
+    """ Builds the store dimension object
+
+    Args:
+        store_df (pd.DataFrame): dataframe of the raw store table
+        staff_df (pd.DataFrame): dataframe of the raw staff table
+        address_df (pd.DataFrame): dataframe of the raw address table
+        city_df (pd.DataFrame): dataframe of the raw city table
+        country_df (pd.DataFrame): dataframe of the raw country table
+
+    Returns:
+        pd.Dataframe: store object as a pandas dataframe
+    """
     store_df.rename(columns={'store_id':'sk_store', 'manager_staff_id': 'staff_id'}, inplace=True)
     staff_df['name']= staff_df.first_name + " " + staff_df.last_name
     staff_df = staff_df[['staff_id', 'name']].copy()
@@ -157,9 +167,20 @@ def transform_store(store_df,staff_df,address_df,city_df,country_df):
 
 
 def transform_factrental(rental_df,inventory_df,dim_date,dim_film,dim_staff,dim_store):
-    
+    """ Builds the fact rental dimension object
+
+    Args:
+        rental_df (pd.Dataframe): dataframe of the raw rental table
+        inventory_df (pd.Dataframe): dataframe of the raw inventory table
+        dim_date (pd.Dataframe): date dimension object as a pandas dataframe
+        dim_film (pd.Dataframe): film dimension object as a pandas dataframe
+        dim_staff (pd.Dataframe: staff dimension object as a pandas dataframe
+        dim_store (pd.Dataframe): store dimension object as a pandas dataframe
+
+    Returns:
+        pd.Dataframe: fact rental object as a pandas dataframe
+    """
     rental_df.rename(columns={'customer_id':'sk_customer', 'rental_date':'date'}, inplace=True)
-    #rental_df['date'] = rental_df.date.dt.date
     rental_df['date']=pd.to_datetime(rental_df.date).dt.date
     rental_df = rental_df.merge(dim_date, how='inner', on='date')
     rental_df = rental_df.merge(inventory_df, how='inner', on='inventory_id')
@@ -172,7 +193,14 @@ def transform_factrental(rental_df,inventory_df,dim_date,dim_film,dim_staff,dim_
     return dim_factrental
 
 def transform_date(date_df):
+    """ Builds the date dimension object
 
+    Args:
+        date_df (pd.DataFrame): dataframe of the raw rental table
+
+    Returns:
+       pd.DataFrame : date dimension object as a pandas dataframe
+    """
     date_df['sk_date'] = date_df.rental_date.dt.strftime("%Y%m%d").astype('int')
     date_df['date'] = date_df.rental_date.dt.date
     date_df['quarter'] = date_df.rental_date.dt.quarter
@@ -186,6 +214,7 @@ def transform_date(date_df):
 
 
 def main():
+    #Creates a connection
     conn = create_engine(SQLALCHEMY_DATABASE_URI, pool_pre_ping=True)
     
     
@@ -313,65 +342,6 @@ def main():
     assert is_directed_acyclic_graph(DAG) == True
     assert is_weakly_connected(DAG) == True
     assert is_empty(DAG) == False
-    print(tuple(nx.topological_sort(DAG)))
-    
-    
-    
-    
-    #q=QueueFactory.factory('default')
-    
-    
-    
-    '''
-    #This is the worker that interacts with the queue
-    def run(task_queue):
-        result_from_last_task = tuple()
-        while not task_queue.empty():
-        
-        # Get the activity from the queue to process
-            task = task_queue.get()
-        
-        # Get inputs to use from dependencies
-            inputs = result_from_last_task
-
-        # Run the task with instructions
-            result = task.run(inputs)
-        
-        # Put the results of the complete task in the result queue
-            result_from_last_task = result
-
-        # Activity is finished running
-            task_queue.task_done()
-    
-    
-    
-    # This the topological order piece. 
-        for task_node in topological_sort(DAG):
-    
-    # For each node we get we want to put them in a Queue
-            task_queue.put(task_node)
-
-        run(task_queue)
-  '''  
-
-    
-    '''
-
-#Make Task Class - container for the functions that executes the functions
-#^^just running the functions
-from typing import List, Tuple
-
-# I am packing this into a function that we can encapsulate within a set of task
-def setup_client(config_file, section):
-    client=PostgresClient
-    cursor=client.connect_from_config(path=config_file, section=section)
-    return cursor
-
-'''
-
-
-
-
 
 if __name__ == '__main__':
     main()
