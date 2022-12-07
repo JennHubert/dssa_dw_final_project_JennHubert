@@ -5,6 +5,9 @@ This repository contains code that functions as an ***ETL process***
 
 It takes data from a highly normalized transactional database and transforms it into a data warehouse in a star schema for optimizied queries.
 
+This code can be used as a guide for creating your own data warehouse.
+
+
 ---
 The following python libraries were crucial in completing this assignement
 
@@ -34,7 +37,7 @@ The following python libraries were crucial in completing this assignement
 ![img](images/StarSchema.png)
 
 ---
-### Below is the code I used to complete the ***Extract*** and ***Load*** portions of this project
+### Below is the code for the functions I used to complete the ***Extract*** and ***Load*** portions of this project
 ``` python 
 # Takes care of the "Extract" part  of ETL
 def read_table(sql, con) -> pd.DataFrame:

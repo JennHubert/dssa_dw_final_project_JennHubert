@@ -1,5 +1,4 @@
 from queue import Queue as Queue
-from typing import Union
 
 
 class QueueFactory:

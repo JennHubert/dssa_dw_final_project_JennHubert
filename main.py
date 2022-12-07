@@ -342,6 +342,8 @@ def main():
     assert is_directed_acyclic_graph(DAG) == True
     assert is_weakly_connected(DAG) == True
     assert is_empty(DAG) == False
+    
+    #conn.close()
 
 if __name__ == '__main__':
     main()
