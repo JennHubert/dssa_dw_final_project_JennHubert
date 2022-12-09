@@ -14,7 +14,6 @@ The following python libraries were crucial in completing this assignement
 1. ***Pandas***
 2. ***SQLAlchemy***
 3. ***NetworkX***
-4. ***psycopg***
 
 ---
 ## Project Structure
